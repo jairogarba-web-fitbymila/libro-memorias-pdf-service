@@ -95,9 +95,36 @@ app.post('/generate-pdf', async (req, res) => {
     
     console.log(`[PDF] ✅ ${memories.length} memorias`)
     
-    // 4. Generar HTML
+    // 4. Generar URLs firmadas para las fotos
+    console.log('[PDF] 📷 Procesando fotos...')
+    const memoriesWithPhotos = await Promise.all(memories.map(async (memory) => {
+      if (memory.image_url) {
+        try {
+          // Extraer el path del archivo de la URL
+          const urlParts = memory.image_url.split('/memory-photos/')
+          if (urlParts.length > 1) {
+            const filePath = urlParts[1].split('?')[0] // Quitar query params si hay
+            const { data } = await supabase.storage
+              .from('memory-photos')
+              .createSignedUrl(filePath, 3600) // 1 hora de validez
+            
+            if (data?.signedUrl) {
+              return { ...memory, signedPhotoUrl: data.signedUrl }
+            }
+          }
+        } catch (e) {
+          console.log(`[PDF] ⚠️ No se pudo obtener foto para memoria ${memory.id}`)
+        }
+      }
+      return memory
+    }))
+    
+    const photosCount = memoriesWithPhotos.filter(m => m.signedPhotoUrl).length
+    console.log(`[PDF] ✅ ${photosCount} fotos procesadas`)
+    
+    // 5. Generar HTML
     console.log('[PDF] 🎨 Generando HTML...')
-    const html = generateBookHTML(book, config, chapters, memories)
+    const html = generateBookHTML(book, config, chapters, memoriesWithPhotos)
     
     // 5. Configurar formato según plan
     const formatMap = {
@@ -337,32 +364,32 @@ function generateBookHTML(book, config, chapters, memories) {
     /* === CAPÍTULOS === */
     .chapter-opener {
       page-break-before: always;
-      padding-top: 2.5in;
+      padding-top: 1in;
       text-align: center;
-      margin-bottom: 1in;
+      margin-bottom: 0.5in;
     }
     
     .chapter-number {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 11pt;
+      font-size: 10pt;
       text-transform: uppercase;
-      letter-spacing: 0.3em;
+      letter-spacing: 0.25em;
       color: #C9A961;
-      margin-bottom: 0.3in;
+      margin-bottom: 0.15in;
     }
     
     .chapter-title {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 24pt;
+      font-size: 20pt;
       font-weight: 500;
       color: #1A1208;
-      margin: 0 0 0.2in 0;
+      margin: 0 0 0.1in 0;
       line-height: 1.3;
     }
     
     .chapter-subtitle {
       font-family: 'Crimson Pro', Georgia, serif;
-      font-size: 12pt;
+      font-size: 11pt;
       font-style: italic;
       color: #6B5D4D;
       margin: 0;
@@ -370,9 +397,35 @@ function generateBookHTML(book, config, chapters, memories) {
     
     .chapter-ornament {
       color: #C9A961;
-      font-size: 14pt;
-      margin-top: 0.4in;
-      letter-spacing: 0.3em;
+      font-size: 12pt;
+      margin-top: 0.25in;
+      margin-bottom: 0.3in;
+    }
+    
+    /* === FOTOS === */
+    .memory-photo {
+      width: 100%;
+      max-width: 4in;
+      height: auto;
+      margin: 1em auto;
+      display: block;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .memory-photo-caption {
+      text-align: center;
+      font-size: 9pt;
+      font-style: italic;
+      color: #8B7355;
+      margin-top: 0.3em;
+      margin-bottom: 1em;
+    }
+    
+    .photo-container {
+      text-align: center;
+      margin: 1.5em 0;
+      page-break-inside: avoid;
     }
     
     /* === CONTENIDO === */
@@ -618,6 +671,13 @@ function generateBookHTML(book, config, chapters, memories) {
         
         html += `<div class="memory-block">\n`
         html += `  <div class="memory-attribution">${memory.contributor_name}, ${memory.contributor_relationship || 'familiar'}</div>\n`
+        
+        // Incluir foto si existe
+        if (memory.signedPhotoUrl) {
+          html += `  <div class="photo-container">
+    <img class="memory-photo" src="${memory.signedPhotoUrl}" alt="Foto compartida por ${memory.contributor_name}" />
+  </div>\n`
+        }
         
         for (const para of paragraphs) {
           html += `  <p class="memory-text">${para.trim()}</p>\n`
