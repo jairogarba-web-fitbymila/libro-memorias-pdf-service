@@ -13,10 +13,15 @@ const PORT = process.env.PORT || 3001
 app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 
-// Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+// Supabase client - con fallback temporal para Railway
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xuyacfbwqzqnxojgzqmw.supabase.co'
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1eWFjZmJ3cXpxbnhvamd6cW13Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczODA4NTU4MSwiZXhwIjoyMDUzNjYxNTgxfQ.rh8KmHdZaDh0vKUJ4WMH44k7k7qLaE5aDEW1Kb2HnSg'
+
+console.log('[INIT] 🚀 Iniciando servicio PDF...')
+console.log('[INIT] 📡 Supabase URL:', SUPABASE_URL)
+console.log('[INIT] 🔑 Service key:', SUPABASE_KEY ? 'Configurado ✅' : 'FALTA ❌')
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 )
 
 // Health check
