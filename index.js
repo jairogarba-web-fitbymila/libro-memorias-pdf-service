@@ -219,7 +219,22 @@ function generateBookHTML(book, config, chapters, memories) {
     .memory-text { text-align: justify; margin-bottom: 8px; }
     .memory-text:first-of-type { text-indent: 0; }
     .memory-text { text-indent: 1.5em; }
-    .memory-photo { max-width: 70%; height: auto; margin: 15px auto; display: block; border-radius: 3px; }
+    .memory-photo-container { 
+      width: 100%; 
+      text-align: center; 
+      margin: 30px 0; 
+      padding: 20px 0;
+      page-break-inside: avoid;
+    }
+    .memory-photo { 
+      max-width: 80%; 
+      max-height: 400px;
+      height: auto; 
+      margin: 0 auto; 
+      display: block; 
+      border-radius: 4px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
     
     .transition { font-style: italic; color: #6B5D4D; text-align: center; margin: 25px 40px; font-size: 10pt; }
     .chapter-closing { font-style: italic; text-align: center; color: #4A4035; margin: 40px 20px 10px; }
@@ -328,7 +343,7 @@ function generateBookHTML(book, config, chapters, memories) {
         
         html += `  <div class="memory">
     <p class="memory-attribution">— ${memory.contributor_name}, ${memory.contributor_relationship || 'familiar'}</p>
-    ${memory.signedPhotoUrl ? `<img class="memory-photo" src="${memory.signedPhotoUrl}" alt="Foto">` : ''}
+    ${memory.signedPhotoUrl ? `<div class="memory-photo-container"><img class="memory-photo" src="${memory.signedPhotoUrl}" alt="Foto de ${memory.contributor_name}"></div>` : ''}
     ${paragraphs.map(p => `<p class="memory-text">${p.trim()}</p>`).join('\n    ')}
   </div>
 `
