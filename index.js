@@ -228,125 +228,327 @@ function generateBookHTML(book, config, chapters, memories) {
 <head>
   <meta charset="UTF-8">
   <title>${book.title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4;
-      margin: 0.75in 0.5in;
+      margin: 1in 0.85in;
     }
     
     body {
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
-      line-height: 1.6;
-      color: #1A1208;
+      font-family: 'Crimson Pro', 'Georgia', serif;
+      font-size: 11.5pt;
+      line-height: 1.75;
+      color: #2C2417;
       margin: 0;
       padding: 0;
+      background: #FFFDF8;
     }
     
-    h1 {
-      font-size: 28pt;
+    /* === PORTADA === */
+    .cover-page {
+      page-break-after: always;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
-      margin: 2in 0 0.5in 0;
-      font-weight: bold;
-      page-break-before: always;
+      background: linear-gradient(180deg, #FAF7F2 0%, #F5EFE6 100%);
+      padding: 2in 1in;
     }
     
-    h2 {
+    .cover-ornament {
+      color: #C9A961;
+      font-size: 24pt;
+      letter-spacing: 0.5em;
+      margin-bottom: 1in;
+    }
+    
+    .cover-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 36pt;
+      font-weight: 500;
+      color: #1A1208;
+      margin: 0 0 0.3in 0;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+    
+    .cover-subtitle {
+      font-family: 'Cormorant Garamond', Georgia, serif;
       font-size: 16pt;
-      text-align: center;
-      margin: 1.5in 0 0.5in 0;
-      font-weight: bold;
-      page-break-before: always;
-    }
-    
-    h3 {
-      font-size: 10pt;
       font-style: italic;
-      margin: 1em 0 0.5em 0;
-      color: #666;
+      color: #6B5D4D;
+      margin: 0.2in 0 0.5in 0;
+      font-weight: 400;
     }
     
-    p {
-      margin: 0 0 1em 0;
-      text-align: justify;
+    .cover-line {
+      width: 2in;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #C9A961, transparent);
+      margin: 0.3in 0;
     }
     
-    .subtitle {
-      font-size: 18pt;
-      text-align: center;
+    .cover-relationship {
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 12pt;
+      color: #8B7355;
       font-style: italic;
-      margin: 0.5in 0;
+      margin-top: 0.5in;
+    }
+    
+    /* === PÁGINAS PRELIMINARES === */
+    .prelim-page {
+      page-break-after: always;
+      padding: 2in 0;
     }
     
     .dedication {
       text-align: center;
       font-style: italic;
-      margin: 2in 0;
+      font-size: 14pt;
+      color: #4A4035;
+      margin: 3in 1in;
+      line-height: 2;
+    }
+    
+    .dedication::before {
+      content: "❦";
+      display: block;
+      font-size: 18pt;
+      color: #C9A961;
+      margin-bottom: 0.5in;
     }
     
     .copyright {
-      font-size: 10pt;
-      margin: 2in 0;
+      font-size: 9pt;
+      color: #8B7355;
+      margin: 2.5in 0 0 0;
+      line-height: 1.8;
     }
     
-    .memory-header {
-      font-style: italic;
-      font-size: 10pt;
-      color: #666;
-      margin: 1.5em 0 0.5em 0;
+    .copyright p {
+      margin: 0.3em 0;
+      text-align: center;
     }
     
-    .transition {
+    /* === CAPÍTULOS === */
+    .chapter-opener {
+      page-break-before: always;
+      padding-top: 2.5in;
+      text-align: center;
+      margin-bottom: 1in;
+    }
+    
+    .chapter-number {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 11pt;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: #C9A961;
+      margin-bottom: 0.3in;
+    }
+    
+    .chapter-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 24pt;
+      font-weight: 500;
+      color: #1A1208;
+      margin: 0 0 0.2in 0;
+      line-height: 1.3;
+    }
+    
+    .chapter-subtitle {
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 12pt;
       font-style: italic;
-      margin: 1em 0;
-      color: #555;
+      color: #6B5D4D;
+      margin: 0;
+    }
+    
+    .chapter-ornament {
+      color: #C9A961;
+      font-size: 14pt;
+      margin-top: 0.4in;
+      letter-spacing: 0.3em;
+    }
+    
+    /* === CONTENIDO === */
+    .chapter-opening {
+      font-style: italic;
+      font-size: 11pt;
+      color: #4A4035;
+      margin: 1.5in 0.5in 1in 0.5in;
+      text-align: center;
+      line-height: 1.9;
+    }
+    
+    .memory-block {
+      margin: 1.5em 0;
+      padding: 0;
+    }
+    
+    .memory-attribution {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 10pt;
+      font-style: italic;
+      color: #8B7355;
+      margin-bottom: 0.4em;
+      padding-left: 0;
+    }
+    
+    .memory-attribution::before {
+      content: "—";
+      margin-right: 0.3em;
+    }
+    
+    .memory-text {
+      margin: 0 0 0.8em 0;
+      text-align: justify;
+      text-indent: 1.5em;
+      hyphens: auto;
+    }
+    
+    .memory-text:first-of-type {
+      text-indent: 0;
+    }
+    
+    .memory-text::first-letter {
+      font-size: 1.1em;
+    }
+    
+    .transition-text {
+      font-style: italic;
+      margin: 1.5em 1in;
+      color: #6B5D4D;
+      text-align: center;
+      font-size: 10.5pt;
     }
     
     .chapter-closing {
       font-style: italic;
-      margin: 2em 0;
+      margin: 2em 0.5in;
       text-align: center;
+      color: #4A4035;
+      font-size: 11pt;
     }
     
-    .colophon {
+    .chapter-closing::after {
+      content: "◆";
+      display: block;
+      margin-top: 1em;
+      color: #C9A961;
+      font-size: 10pt;
+    }
+    
+    /* === SECCIONES ESPECIALES === */
+    .prologue-page {
+      page-break-before: always;
+    }
+    
+    .section-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 18pt;
       text-align: center;
-      margin: 3in 0;
+      color: #1A1208;
+      margin: 2in 0 1in 0;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+    
+    .section-title::after {
+      content: "";
+      display: block;
+      width: 1.5in;
+      height: 1px;
+      background: #C9A961;
+      margin: 0.4in auto 0;
+    }
+    
+    .prologue-text, .epilogue-text {
       font-style: italic;
+      line-height: 1.9;
+      color: #3D352A;
     }
     
+    /* === COLOFÓN === */
+    .colophon {
+      page-break-before: always;
+      text-align: center;
+      padding-top: 3in;
+      font-size: 10pt;
+      color: #8B7355;
+      line-height: 2;
+    }
+    
+    .colophon-ornament {
+      font-size: 18pt;
+      color: #C9A961;
+      margin-bottom: 1in;
+    }
+    
+    .colophon p {
+      margin: 0.3em 0;
+    }
+    
+    .colophon-brand {
+      margin-top: 1in;
+      font-style: italic;
+      font-size: 9pt;
+    }
+    
+    /* === UTILIDADES === */
     .page-break {
       page-break-after: always;
+    }
+    
+    .small-caps {
+      font-variant: small-caps;
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
 <body>
 
-<!-- PORTADILLA -->
-<div class="page-break">
-  <h1>${book.title}</h1>
-  <p class="subtitle">Memorias de ${book.honoree_name}</p>
-  <p class="subtitle" style="font-size: 12pt;">${book.honoree_relationship || 'Su familia'}</p>
+<!-- PORTADA -->
+<div class="cover-page">
+  <div class="cover-ornament">✦ ✦ ✦</div>
+  <h1 class="cover-title">${book.honoree_name}</h1>
+  <div class="cover-line"></div>
+  <p class="cover-subtitle">Un libro de memorias</p>
+  <p class="cover-relationship">${book.honoree_relationship || 'Escrito con amor por su familia'}</p>
 </div>
 
+<!-- PÁGINA DE CORTESÍA -->
+<div class="prelim-page"></div>
+
 <!-- COPYRIGHT -->
-<div class="page-break">
+<div class="prelim-page">
   <div class="copyright">
-    <p>Copyright © ${new Date().getFullYear()} ${book.honoree_name}</p>
+    <p>✦</p>
+    <p>&nbsp;</p>
+    <p>© ${new Date().getFullYear()} Familia de ${book.honoree_name}</p>
     <p>Todos los derechos reservados.</p>
     <p>&nbsp;</p>
-    <p>Este libro de memorias ha sido creado con amor por la familia.</p>
-    <p>Ninguna parte puede ser reproducida sin permiso expreso.</p>
+    <p>Este libro de memorias ha sido creado con amor,</p>
+    <p>recogiendo las voces de quienes más le quieren.</p>
     <p>&nbsp;</p>
-    <p>Creado con Libro de Memorias</p>
-    <p>librodememorias.com</p>
+    <p>Ninguna parte de esta publicación puede ser reproducida</p>
+    <p>sin el permiso expreso de la familia.</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p style="font-style: italic; color: #B8A48C;">Creado con Libro de Memorias</p>
+    <p style="font-size: 8pt; color: #B8A48C;">librodememorias.com</p>
   </div>
 </div>
 
 <!-- DEDICATORIA -->
-<div class="page-break">
+<div class="prelim-page">
   <div class="dedication">
-    <p>Para ${book.honoree_name},</p>
-    <p>con todo nuestro amor</p>
+    Para ${book.honoree_name},<br>
+    cuyas historias merecen ser eternas.
   </div>
 </div>
 `
@@ -359,52 +561,69 @@ function generateBookHTML(book, config, chapters, memories) {
     
     if (prologueText) {
       html += `
-<div class="page-break">
-  <h2>PRÓLOGO</h2>
-  <p>${prologueText}</p>
+<div class="prologue-page">
+  <h2 class="section-title">Prólogo</h2>
+  <div class="prologue-text">
+    <p>${prologueText}</p>
+  </div>
 </div>
 `
     }
   }
   
   // CAPÍTULOS
+  let chapterNum = 0
   for (const chapter of chapters) {
     if (chapter.chapter_type === 'intro') {
       if (chapter.generated_opening) {
         html += `
-<div class="page-break">
-  <p>${chapter.generated_opening}</p>
+<div class="prologue-page">
+  <h2 class="section-title">Introducción</h2>
+  <div class="prologue-text">
+    <p>${chapter.generated_opening}</p>
+  </div>
 </div>
 `
       }
     } else if (chapter.chapter_type === 'chapter') {
-      // Separador
+      chapterNum++
+      
+      // Página de apertura del capítulo
       html += `
-<div class="page-break">
-  <h2>${chapter.title}</h2>
+<div class="chapter-opener">
+  <div class="chapter-number">Capítulo ${chapterNum}</div>
+  <h2 class="chapter-title">${chapter.title}</h2>
 `
       if (chapter.subtitle) {
-        html += `  <p class="subtitle" style="font-size: 12pt;">${chapter.subtitle}</p>\n`
+        html += `  <p class="chapter-subtitle">${chapter.subtitle}</p>\n`
       }
-      html += `</div>\n`
+      html += `  <div class="chapter-ornament">◆</div>
+</div>
+`
       
-      // Apertura
+      // Apertura del capítulo
       if (chapter.generated_opening) {
-        html += `<p>${chapter.generated_opening}</p>\n`
+        html += `<div class="chapter-opening">${chapter.generated_opening}</div>\n`
       }
       
       // Memorias
-      const chapterMemories = memories.filter(m => chapter.memory_ids.includes(m.id))
+      const chapterMemories = memories.filter(m => chapter.memory_ids && chapter.memory_ids.includes(m.id))
       
       for (let i = 0; i < chapterMemories.length; i++) {
         const memory = chapterMemories[i]
+        const memoryText = getMemoryText(memory)
         
-        html += `
-<div class="memory-header">
-  ${memory.contributor_name} (${memory.contributor_relationship || 'Familiar'})
-</div>
-<p>${getMemoryText(memory)}</p>
-`
+        // Dividir el texto en párrafos
+        const paragraphs = memoryText.split(/\n\n+/).filter(p => p.trim())
+        
+        html += `<div class="memory-block">\n`
+        html += `  <div class="memory-attribution">${memory.contributor_name}, ${memory.contributor_relationship || 'familiar'}</div>\n`
+        
+        for (const para of paragraphs) {
+          html += `  <p class="memory-text">${para.trim()}</p>\n`
+        }
+        
+        html += `</div>\n`
         
         // Transición
         if (i < chapterMemories.length - 1 && chapter.generated_transitions) {
@@ -413,20 +632,22 @@ function generateBookHTML(book, config, chapters, memories) {
           const transition = chapter.generated_transitions[transitionKey]
           
           if (transition) {
-            html += `<p class="transition">${transition}</p>\n`
+            html += `<p class="transition-text">${transition}</p>\n`
           }
         }
       }
       
-      // Cierre
+      // Cierre del capítulo
       if (chapter.generated_closing) {
-        html += `<p class="chapter-closing">${chapter.generated_closing}</p>\n`
+        html += `<div class="chapter-closing">${chapter.generated_closing}</div>\n`
       }
     } else if (chapter.chapter_type === 'epilogue') {
       html += `
-<div class="page-break">
-  <h2>EPÍLOGO</h2>
-  <p>${chapter.generated_opening || ''}</p>
+<div class="prologue-page">
+  <h2 class="section-title">Epílogo</h2>
+  <div class="epilogue-text">
+    <p>${chapter.generated_opening || ''}</p>
+  </div>
 </div>
 `
     }
@@ -439,13 +660,22 @@ function generateBookHTML(book, config, chapters, memories) {
     day: 'numeric' 
   })
   
+  const year = new Date().getFullYear()
+  
   html += `
-<div class="page-break">
-  <div class="colophon">
-    <p>Este libro fue creado con amor por la familia</p>
-    <p>${date}</p>
-    <p>&nbsp;</p>
-    <p style="font-size: 10pt;">Libro de Memorias · librodememorias.com</p>
+<div class="colophon">
+  <div class="colophon-ornament">❦</div>
+  <p>Este libro fue compuesto con las memorias</p>
+  <p>compartidas por quienes más quieren a ${book.honoree_name}.</p>
+  <p>&nbsp;</p>
+  <p>Terminado de editar el ${date}.</p>
+  <p>&nbsp;</p>
+  <p>Que estas palabras perduren</p>
+  <p>como perdura el amor que las inspiró.</p>
+  <div class="colophon-brand">
+    <p>✦</p>
+    <p>Libro de Memorias</p>
+    <p style="font-size: 8pt;">librodememorias.com</p>
   </div>
 </div>
 
