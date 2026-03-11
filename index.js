@@ -126,15 +126,49 @@ app.post('/generate-pdf', async (req, res) => {
     console.log('[PDF] 🎨 Generando HTML...')
     const html = generateBookHTML(book, config, chapters, memoriesWithPhotos)
     
-    // 5. Configurar formato según plan
+    // 5. Configurar formato según plan - ESPECIFICACIONES LULU
+    // Bleed: 0.125" en todos los lados
+    // Safety margin: 0.5" mínimo desde trim edge
+    // Gutter: margen interior extra para binding (varía según páginas)
     const formatMap = {
-      'origen': { width: '6in', height: '9in', name: 'MEMORIA' },
-      'legado': { width: '7in', height: '10in', name: 'LEGADO' },
-      'obra': { width: '8.5in', height: '11in', name: 'ETERNO' }
+      'origen': { 
+        width: '6.25in',      // 6" trim + 0.125" bleed × 2
+        height: '9.25in',     // 9" trim + 0.125" bleed × 2
+        trimWidth: '6in',
+        trimHeight: '9in',
+        name: 'MEMORIA',
+        luluId: '0600X0900FCSTDPB060UW444MNG'
+      },
+      'legado': { 
+        width: '7.25in',      // 7" trim + 0.125" bleed × 2
+        height: '10.25in',    // 10" trim + 0.125" bleed × 2
+        trimWidth: '7in',
+        trimHeight: '10in',
+        name: 'LEGADO',
+        luluId: '0700X1000FCSTDHC080CW444MXX'
+      },
+      'obra': { 
+        width: '8.75in',      // 8.5" trim + 0.125" bleed × 2
+        height: '11.25in',    // 11" trim + 0.125" bleed × 2
+        trimWidth: '8.5in',
+        trimHeight: '11in',
+        name: 'ETERNO',
+        luluId: '0850X1100FCSTDHC080CW444MXX'
+      }
     }
     
     const format = formatMap[book.plan_type?.toLowerCase()] || formatMap.origen
-    console.log(`[PDF] 📐 Formato: ${format.name} (${format.width} × ${format.height})`)
+    
+    // Calcular gutter basado en número estimado de páginas
+    const estimatedPages = Math.ceil(memories.length * 1.5) + 20 // Aproximado
+    let gutterInches = 0.5 // Base
+    if (estimatedPages > 150) gutterInches = 0.75
+    else if (estimatedPages > 300) gutterInches = 0.875
+    else if (estimatedPages > 500) gutterInches = 1.0
+    
+    console.log(`[PDF] 📐 Formato Lulu: ${format.name} (${format.trimWidth} × ${format.trimHeight})`)
+    console.log(`[PDF] 📐 Con bleed: ${format.width} × ${format.height}`)
+    console.log(`[PDF] 📐 Gutter estimado: ${gutterInches}in (${estimatedPages} páginas aprox)`)
     
     // 6. Generar PDF con Puppeteer
     console.log('[PDF] 🖨️ Iniciando Puppeteer...')
@@ -153,18 +187,19 @@ app.post('/generate-pdf', async (req, res) => {
     // Cargar HTML
     await page.setContent(html, { waitUntil: 'networkidle0' })
     
-    // Generar PDF
+    // Generar PDF con tamaño exacto para Lulu
     console.log('[PDF] 📄 Generando PDF...')
     const pdfBuffer = await page.pdf({
-      format: 'A4', // Puppeteer no soporta formatos custom, usamos A4 y ajustamos con CSS
+      width: format.width,
+      height: format.height,
       printBackground: true,
       margin: {
-        top: '0.75in',
-        right: '0.5in',
-        bottom: '0.75in',
-        left: '0.5in'
+        top: '0.625in',       // 0.5" safety + 0.125" bleed
+        right: '0.625in',     // 0.5" safety + 0.125" bleed
+        bottom: '0.625in',    // 0.5" safety + 0.125" bleed
+        left: `${gutterInches + 0.125}in`  // gutter + 0.125" bleed
       },
-      preferCSSPageSize: true
+      preferCSSPageSize: false
     })
     
     await browser.close()
