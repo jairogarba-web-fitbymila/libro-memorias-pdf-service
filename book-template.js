@@ -1,6 +1,8 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer'
 
+const { createElement: h } = React
+
 // Registrar fuentes elegantes
 Font.register({
   family: 'Cormorant',
@@ -27,16 +29,15 @@ const colors = {
   midText: '#4A4035',
   softText: '#6B5D4D',
   lightText: '#8B7355',
-  border: '#E8DFD0',
 }
 
-// Estilos base
+// Estilos
 const styles = StyleSheet.create({
   page: {
     backgroundColor: colors.cream,
-    paddingTop: 72, // 1 inch
+    paddingTop: 72,
     paddingBottom: 72,
-    paddingLeft: 54, // 0.75 inch
+    paddingLeft: 54,
     paddingRight: 54,
     fontFamily: 'Crimson',
     fontSize: 11,
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
     color: colors.darkText,
   },
   
-  // === PORTADA ===
+  // Portada
   coverPage: {
     backgroundColor: colors.cream,
     display: 'flex',
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   
-  // === DEDICATORIA ===
+  // Dedicatoria
   dedicationPage: {
     display: 'flex',
     flexDirection: 'column',
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
     lineHeight: 2,
   },
   
-  // === COPYRIGHT ===
+  // Copyright
   copyrightPage: {
     display: 'flex',
     flexDirection: 'column',
@@ -128,10 +129,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   
-  // === CAPÍTULOS ===
+  // Capítulos
   chapterOpener: {
-    paddingTop: 100,
-    marginBottom: 40,
+    paddingTop: 80,
+    marginBottom: 30,
     textAlign: 'center',
   },
   chapterNumber: {
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   
-  // === MEMORIAS ===
+  // Memorias
   memoryBlock: {
     marginBottom: 24,
   },
@@ -196,13 +197,11 @@ const styles = StyleSheet.create({
   },
   memoryPhoto: {
     width: 250,
-    height: 'auto',
     marginVertical: 16,
     alignSelf: 'center',
-    borderRadius: 4,
   },
   
-  // === TRANSICIONES ===
+  // Transiciones
   transition: {
     fontStyle: 'italic',
     fontSize: 10,
@@ -212,7 +211,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   
-  // === CIERRE CAPÍTULO ===
+  // Cierre
   chapterClosing: {
     fontStyle: 'italic',
     textAlign: 'center',
@@ -227,7 +226,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   
-  // === SECCIONES ESPECIALES ===
+  // Secciones
   sectionTitle: {
     fontFamily: 'Cormorant',
     fontSize: 18,
@@ -251,7 +250,7 @@ const styles = StyleSheet.create({
     color: colors.midText,
   },
   
-  // === COLOFÓN ===
+  // Colofón
   colophonPage: {
     display: 'flex',
     flexDirection: 'column',
@@ -274,15 +273,11 @@ const styles = StyleSheet.create({
   },
   colophonBrand: {
     marginTop: 50,
-    fontSize: 9,
-    fontStyle: 'italic',
-    color: colors.lightText,
-    textAlign: 'center',
   },
 })
 
-// Componente del libro
-const BookDocument = ({ book, config, chapters, memories }) => {
+// Crear documento
+const createBookDocument = (book, config, chapters, memories) => {
   const getMemoryText = (memory) => {
     return memory.enriched_text || memory.original_text || memory.transcription || ''
   }
@@ -296,185 +291,215 @@ const BookDocument = ({ book, config, chapters, memories }) => {
   
   let chapterNum = 0
   
-  return (
-    <Document>
-      {/* PORTADA */}
-      <Page size="A4" style={styles.page}>
-        <View style={styles.coverPage}>
-          <Text style={styles.coverOrnament}>✦ ✦ ✦</Text>
-          <Text style={styles.coverTitle}>{book.honoree_name}</Text>
-          <View style={styles.coverLine} />
-          <Text style={styles.coverSubtitle}>Un libro de memorias</Text>
-          <Text style={styles.coverRelationship}>
-            {book.honoree_relationship || 'Escrito con amor por su familia'}
-          </Text>
-        </View>
-      </Page>
-      
-      {/* PÁGINA EN BLANCO */}
-      <Page size="A4" style={styles.page}>
-        <View style={{ flex: 1 }} />
-      </Page>
-      
-      {/* COPYRIGHT */}
-      <Page size="A4" style={styles.page}>
-        <View style={styles.copyrightPage}>
-          <Text style={styles.copyrightText}>✦</Text>
-          <Text style={styles.copyrightText}> </Text>
-          <Text style={styles.copyrightText}>© {year} Familia de {book.honoree_name}</Text>
-          <Text style={styles.copyrightText}>Todos los derechos reservados.</Text>
-          <Text style={styles.copyrightText}> </Text>
-          <Text style={styles.copyrightText}>Este libro de memorias ha sido creado con amor,</Text>
-          <Text style={styles.copyrightText}>recogiendo las voces de quienes más le quieren.</Text>
-          <Text style={styles.copyrightText}> </Text>
-          <Text style={styles.copyrightText}> </Text>
-          <Text style={{...styles.copyrightText, fontStyle: 'italic'}}>Creado con Libro de Memorias</Text>
-          <Text style={{...styles.copyrightText, fontSize: 8}}>librodememorias.com</Text>
-        </View>
-      </Page>
-      
-      {/* DEDICATORIA */}
-      <Page size="A4" style={styles.page}>
-        <View style={styles.dedicationPage}>
-          <Text style={styles.dedicationOrnament}>❦</Text>
-          <Text style={styles.dedicationText}>
-            Para {book.honoree_name},{'\n'}
-            cuyas historias merecen ser eternas.
-          </Text>
-        </View>
-      </Page>
-      
-      {/* PRÓLOGO */}
-      {config.include_prologue && (config.prologue_manual_text || config.prologue_generated_text) && (
-        <Page size="A4" style={styles.page}>
-          <Text style={styles.sectionTitle}>Prólogo</Text>
-          <View style={styles.sectionLine} />
-          <Text style={styles.prologueText}>
-            {config.prologue_type === 'manual' ? config.prologue_manual_text : config.prologue_generated_text}
-          </Text>
-        </Page>
-      )}
-      
-      {/* CAPÍTULOS */}
-      {chapters.map((chapter) => {
-        if (chapter.chapter_type === 'intro') {
-          if (!chapter.generated_opening) return null
-          return (
-            <Page key={chapter.id} size="A4" style={styles.page}>
-              <Text style={styles.sectionTitle}>Introducción</Text>
-              <View style={styles.sectionLine} />
-              <Text style={styles.prologueText}>{chapter.generated_opening}</Text>
-            </Page>
-          )
-        }
-        
-        if (chapter.chapter_type === 'chapter') {
-          chapterNum++
-          const chapterMemories = memories.filter(m => 
-            chapter.memory_ids && chapter.memory_ids.includes(m.id)
-          )
-          
-          return (
-            <Page key={chapter.id} size="A4" style={styles.page} wrap>
-              {/* Cabecera del capítulo */}
-              <View style={styles.chapterOpener}>
-                <Text style={styles.chapterNumber}>Capítulo {chapterNum}</Text>
-                <Text style={styles.chapterTitle}>{chapter.title}</Text>
-                {chapter.subtitle && (
-                  <Text style={styles.chapterSubtitle}>{chapter.subtitle}</Text>
-                )}
-                <Text style={styles.chapterOrnament}>◆</Text>
-              </View>
-              
-              {/* Apertura */}
-              {chapter.generated_opening && (
-                <Text style={styles.chapterOpening}>{chapter.generated_opening}</Text>
-              )}
-              
-              {/* Memorias */}
-              {chapterMemories.map((memory, i) => {
-                const memoryText = getMemoryText(memory)
-                const paragraphs = memoryText.split(/\n\n+/).filter(p => p.trim())
-                
-                return (
-                  <View key={memory.id} style={styles.memoryBlock} wrap={false}>
-                    <Text style={styles.memoryAttribution}>
-                      — {memory.contributor_name}, {memory.contributor_relationship || 'familiar'}
-                    </Text>
-                    
-                    {/* Foto si existe */}
-                    {memory.signedPhotoUrl && (
-                      <Image style={styles.memoryPhoto} src={memory.signedPhotoUrl} />
-                    )}
-                    
-                    {paragraphs.map((para, j) => (
-                      <Text 
-                        key={j} 
-                        style={j === 0 ? styles.memoryTextFirst : styles.memoryText}
-                      >
-                        {para.trim()}
-                      </Text>
-                    ))}
-                    
-                    {/* Transición */}
-                    {i < chapterMemories.length - 1 && chapter.generated_transitions && (
-                      (() => {
-                        const nextMemory = chapterMemories[i + 1]
-                        const transitionKey = `${memory.id}_to_${nextMemory.id}`
-                        const transition = chapter.generated_transitions[transitionKey]
-                        return transition ? (
-                          <Text style={styles.transition}>{transition}</Text>
-                        ) : null
-                      })()
-                    )}
-                  </View>
-                )
-              })}
-              
-              {/* Cierre */}
-              {chapter.generated_closing && (
-                <View>
-                  <Text style={styles.chapterClosing}>{chapter.generated_closing}</Text>
-                  <Text style={styles.chapterClosingOrnament}>◆</Text>
-                </View>
-              )}
-            </Page>
-          )
-        }
-        
-        if (chapter.chapter_type === 'epilogue') {
-          return (
-            <Page key={chapter.id} size="A4" style={styles.page}>
-              <Text style={styles.sectionTitle}>Epílogo</Text>
-              <View style={styles.sectionLine} />
-              <Text style={styles.prologueText}>{chapter.generated_opening || ''}</Text>
-            </Page>
-          )
-        }
-        
-        return null
-      })}
-      
-      {/* COLOFÓN */}
-      <Page size="A4" style={styles.page}>
-        <View style={styles.colophonPage}>
-          <Text style={styles.colophonOrnament}>❦</Text>
-          <Text style={styles.colophonText}>Este libro fue compuesto con las memorias</Text>
-          <Text style={styles.colophonText}>compartidas por quienes más quieren a {book.honoree_name}.</Text>
-          <Text style={styles.colophonText}> </Text>
-          <Text style={styles.colophonText}>Terminado de editar el {date}.</Text>
-          <Text style={styles.colophonText}> </Text>
-          <Text style={styles.colophonText}>Que estas palabras perduren</Text>
-          <Text style={styles.colophonText}>como perdura el amor que las inspiró.</Text>
-          <View style={styles.colophonBrand}>
-            <Text>✦</Text>
-            <Text>Libro de Memorias</Text>
-            <Text style={{ fontSize: 8 }}>librodememorias.com</Text>
-          </View>
-        </View>
-      </Page>
-    </Document>
+  const pages = []
+  
+  // PORTADA
+  pages.push(
+    h(Page, { key: 'cover', size: 'A4', style: styles.page },
+      h(View, { style: styles.coverPage },
+        h(Text, { style: styles.coverOrnament }, '✦  ✦  ✦'),
+        h(Text, { style: styles.coverTitle }, book.honoree_name),
+        h(View, { style: styles.coverLine }),
+        h(Text, { style: styles.coverSubtitle }, 'Un libro de memorias'),
+        h(Text, { style: styles.coverRelationship }, 
+          book.honoree_relationship || 'Escrito con amor por su familia'
+        )
+      )
+    )
   )
+  
+  // PÁGINA EN BLANCO
+  pages.push(
+    h(Page, { key: 'blank', size: 'A4', style: styles.page },
+      h(View, { style: { flex: 1 } })
+    )
+  )
+  
+  // COPYRIGHT
+  pages.push(
+    h(Page, { key: 'copyright', size: 'A4', style: styles.page },
+      h(View, { style: styles.copyrightPage },
+        h(Text, { style: styles.copyrightText }, '✦'),
+        h(Text, { style: styles.copyrightText }, ' '),
+        h(Text, { style: styles.copyrightText }, `© ${year} Familia de ${book.honoree_name}`),
+        h(Text, { style: styles.copyrightText }, 'Todos los derechos reservados.'),
+        h(Text, { style: styles.copyrightText }, ' '),
+        h(Text, { style: styles.copyrightText }, 'Este libro de memorias ha sido creado con amor,'),
+        h(Text, { style: styles.copyrightText }, 'recogiendo las voces de quienes más le quieren.'),
+        h(Text, { style: styles.copyrightText }, ' '),
+        h(Text, { style: { ...styles.copyrightText, fontStyle: 'italic' } }, 'Creado con Libro de Memorias'),
+        h(Text, { style: { ...styles.copyrightText, fontSize: 8 } }, 'librodememorias.com')
+      )
+    )
+  )
+  
+  // DEDICATORIA
+  pages.push(
+    h(Page, { key: 'dedication', size: 'A4', style: styles.page },
+      h(View, { style: styles.dedicationPage },
+        h(Text, { style: styles.dedicationOrnament }, '❦'),
+        h(Text, { style: styles.dedicationText }, 
+          `Para ${book.honoree_name},\ncuyas historias merecen ser eternas.`
+        )
+      )
+    )
+  )
+  
+  // PRÓLOGO
+  if (config && config.include_prologue) {
+    const prologueText = config.prologue_type === 'manual' 
+      ? config.prologue_manual_text 
+      : config.prologue_generated_text
+    
+    if (prologueText) {
+      pages.push(
+        h(Page, { key: 'prologue', size: 'A4', style: styles.page },
+          h(Text, { style: styles.sectionTitle }, 'Prólogo'),
+          h(View, { style: styles.sectionLine }),
+          h(Text, { style: styles.prologueText }, prologueText)
+        )
+      )
+    }
+  }
+  
+  // CAPÍTULOS
+  chapters.forEach((chapter, chapterIndex) => {
+    if (chapter.chapter_type === 'intro') {
+      if (chapter.generated_opening) {
+        pages.push(
+          h(Page, { key: `intro-${chapterIndex}`, size: 'A4', style: styles.page },
+            h(Text, { style: styles.sectionTitle }, 'Introducción'),
+            h(View, { style: styles.sectionLine }),
+            h(Text, { style: styles.prologueText }, chapter.generated_opening)
+          )
+        )
+      }
+      return
+    }
+    
+    if (chapter.chapter_type === 'chapter') {
+      chapterNum++
+      const chapterMemories = memories.filter(m => 
+        chapter.memory_ids && chapter.memory_ids.includes(m.id)
+      )
+      
+      const pageContent = []
+      
+      // Cabecera
+      pageContent.push(
+        h(View, { key: 'header', style: styles.chapterOpener },
+          h(Text, { style: styles.chapterNumber }, `Capítulo ${chapterNum}`),
+          h(Text, { style: styles.chapterTitle }, chapter.title),
+          chapter.subtitle ? h(Text, { style: styles.chapterSubtitle }, chapter.subtitle) : null,
+          h(Text, { style: styles.chapterOrnament }, '◆')
+        )
+      )
+      
+      // Apertura
+      if (chapter.generated_opening) {
+        pageContent.push(
+          h(Text, { key: 'opening', style: styles.chapterOpening }, chapter.generated_opening)
+        )
+      }
+      
+      // Memorias
+      chapterMemories.forEach((memory, i) => {
+        const memoryText = getMemoryText(memory)
+        const paragraphs = memoryText.split(/\n\n+/).filter(p => p.trim())
+        
+        const memoryContent = [
+          h(Text, { key: 'attr', style: styles.memoryAttribution }, 
+            `— ${memory.contributor_name}, ${memory.contributor_relationship || 'familiar'}`
+          )
+        ]
+        
+        // Foto
+        if (memory.signedPhotoUrl) {
+          memoryContent.push(
+            h(Image, { key: 'photo', style: styles.memoryPhoto, src: memory.signedPhotoUrl })
+          )
+        }
+        
+        // Párrafos
+        paragraphs.forEach((para, j) => {
+          memoryContent.push(
+            h(Text, { 
+              key: `para-${j}`, 
+              style: j === 0 ? styles.memoryTextFirst : styles.memoryText 
+            }, para.trim())
+          )
+        })
+        
+        pageContent.push(
+          h(View, { key: `memory-${memory.id}`, style: styles.memoryBlock, wrap: false }, 
+            memoryContent
+          )
+        )
+        
+        // Transición
+        if (i < chapterMemories.length - 1 && chapter.generated_transitions) {
+          const nextMemory = chapterMemories[i + 1]
+          const transitionKey = `${memory.id}_to_${nextMemory.id}`
+          const transition = chapter.generated_transitions[transitionKey]
+          if (transition) {
+            pageContent.push(
+              h(Text, { key: `trans-${i}`, style: styles.transition }, transition)
+            )
+          }
+        }
+      })
+      
+      // Cierre
+      if (chapter.generated_closing) {
+        pageContent.push(
+          h(View, { key: 'closing' },
+            h(Text, { style: styles.chapterClosing }, chapter.generated_closing),
+            h(Text, { style: styles.chapterClosingOrnament }, '◆')
+          )
+        )
+      }
+      
+      pages.push(
+        h(Page, { key: `chapter-${chapterIndex}`, size: 'A4', style: styles.page, wrap: true },
+          pageContent
+        )
+      )
+      return
+    }
+    
+    if (chapter.chapter_type === 'epilogue') {
+      pages.push(
+        h(Page, { key: `epilogue-${chapterIndex}`, size: 'A4', style: styles.page },
+          h(Text, { style: styles.sectionTitle }, 'Epílogo'),
+          h(View, { style: styles.sectionLine }),
+          h(Text, { style: styles.prologueText }, chapter.generated_opening || '')
+        )
+      )
+    }
+  })
+  
+  // COLOFÓN
+  pages.push(
+    h(Page, { key: 'colophon', size: 'A4', style: styles.page },
+      h(View, { style: styles.colophonPage },
+        h(Text, { style: styles.colophonOrnament }, '❦'),
+        h(Text, { style: styles.colophonText }, 'Este libro fue compuesto con las memorias'),
+        h(Text, { style: styles.colophonText }, `compartidas por quienes más quieren a ${book.honoree_name}.`),
+        h(Text, { style: styles.colophonText }, ' '),
+        h(Text, { style: styles.colophonText }, `Terminado de editar el ${date}.`),
+        h(Text, { style: styles.colophonText }, ' '),
+        h(Text, { style: styles.colophonText }, 'Que estas palabras perduren'),
+        h(Text, { style: styles.colophonText }, 'como perdura el amor que las inspiró.'),
+        h(View, { style: styles.colophonBrand },
+          h(Text, { style: { ...styles.colophonText, marginBottom: 8 } }, '✦'),
+          h(Text, { style: styles.colophonText }, 'Libro de Memorias'),
+          h(Text, { style: { ...styles.colophonText, fontSize: 8 } }, 'librodememorias.com')
+        )
+      )
+    )
+  )
+  
+  return h(Document, null, pages)
 }
 
-export default BookDocument
+export default createBookDocument

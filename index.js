@@ -3,8 +3,7 @@ import ReactPDF from '@react-pdf/renderer'
 import { createClient } from '@supabase/supabase-js'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import React from 'react'
-import BookDocument from './book-template.js'
+import createBookDocument from './book-template.js'
 
 dotenv.config()
 
@@ -131,12 +130,7 @@ app.post('/generate-pdf', async (req, res) => {
     // 5. Generar PDF con React-PDF
     console.log('[PDF] 🎨 Generando PDF con React-PDF...')
     
-    const document = React.createElement(BookDocument, {
-      book,
-      config,
-      chapters,
-      memories: memoriesWithPhotos
-    })
+    const document = createBookDocument(book, config, chapters, memoriesWithPhotos)
     
     const pdfBuffer = await ReactPDF.renderToBuffer(document)
     
