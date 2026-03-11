@@ -22,7 +22,6 @@ console.log('[INIT] 📡 Supabase URL:', SUPABASE_URL)
 console.log('[INIT] 🔑 Service key:', SUPABASE_KEY ? 'Configurado ✅' : 'FALTA ❌')
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-)
 
 // Health check
 app.get('/health', (req, res) => {
