@@ -103,7 +103,7 @@ app.post('/generate-pdf', async (req, res) => {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '0.8in', right: '0.7in', bottom: '0.8in', left: '0.7in' }
+      margin: { top: '1in', right: '0.85in', bottom: '1in', left: '0.85in' }
     })
     
     await browser.close()
@@ -173,11 +173,14 @@ function generateBookHTML(book, config, chapters, memories) {
     }
     
     .page {
-      width: 210mm;
-      min-height: 297mm;
-      padding: 25mm 20mm;
+      width: 100%;
+      min-height: 100%;
+      padding: 0;
       page-break-after: always;
       background: #FFFDF8;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
     }
     
     .page-center {
@@ -216,9 +219,15 @@ function generateBookHTML(book, config, chapters, memories) {
     /* MEMORIAS */
     .memory { margin-bottom: 30px; }
     .memory-attribution { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 10pt; font-style: italic; color: #8B7355; margin-bottom: 10px; }
-    .memory-text { text-align: justify; margin-bottom: 8px; }
+    .memory-text { 
+      text-align: justify; 
+      margin-bottom: 8px; 
+      text-indent: 1.5em;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      hyphens: auto;
+    }
     .memory-text:first-of-type { text-indent: 0; }
-    .memory-text { text-indent: 1.5em; }
     .memory-photo-container { 
       width: 100%; 
       text-align: center; 
