@@ -51,10 +51,11 @@ body {
 /* === PÁGINA BASE === */
 .page {
   width: 6in;
-  min-height: 9in;
+  height: 9in;
   position: relative;
   page-break-after: always;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Páginas impares (derecha): margen inner a la izquierda */
@@ -387,13 +388,17 @@ body {
 
 /* === PÁGINA LEGAL / COLOFÓN === */
 .legal-page {
+  width: 6in;
+  height: 9in;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 9in;
   text-align: center;
   padding: 0.875in;
+  box-sizing: border-box;
+  overflow: hidden;
+  page-break-after: always;
 }
 .legal-title {
   font-family: 'Lora', Georgia, serif;
@@ -427,13 +432,17 @@ body {
 
 /* === DEDICATORIA === */
 .dedication-page {
+  width: 6in;
+  height: 9in;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 9in;
   text-align: center;
   padding: 0.875in;
+  box-sizing: border-box;
+  overflow: hidden;
+  page-break-after: always;
 }
 .dedication-text {
   font-family: 'Lora', Georgia, serif;
