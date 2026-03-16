@@ -3,8 +3,84 @@ import puppeteer from 'puppeteer'
 import { createClient } from '@supabase/supabase-js'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import sharp from 'sharp'
 
 dotenv.config()
+
+// ============================================
+// IMAGE PROCESSING UTILITIES
+// ============================================
+
+/**
+ * Detecta las dimensiones de una imagen desde su URL y devuelve
+ * la clase CSS apropiada según su aspect ratio.
+ * También redimensiona imágenes muy grandes para optimizar el PDF.
+ */
+async function processPhotoForPdf(imageUrl) {
+  try {
+    const response = await fetch(imageUrl)
+    if (!response.ok) return { cssClass: 'photo-medium', dataUrl: null }
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    const metadata = await sharp(buffer).metadata()
+    const { width, height } = metadata
+
+    if (!width || !height) return { cssClass: 'photo-medium', dataUrl: null }
+
+    const ratio = width / height
+
+    // Determinar clase CSS según aspect ratio
+    let cssClass
+    if (ratio > 2.2) {
+      cssClass = 'photo-panoramic'       // Panorámica (ej: 21:9, 3:1)
+    } else if (ratio > 1.15) {
+      cssClass = 'photo-landscape'        // Paisaje (ej: 16:9, 4:3, 3:2)
+    } else if (ratio >= 0.85) {
+      cssClass = 'photo-square'           // Cuadrada (ej: 1:1, casi cuadrada)
+    } else if (ratio >= 0.55) {
+      cssClass = 'photo-portrait'         // Retrato (ej: 3:4, 2:3)
+    } else {
+      cssClass = 'photo-portrait-tall'    // Vertical extremo (ej: 9:16)
+    }
+
+    // Redimensionar si es muy grande (max 1200px en el lado mayor)
+    // para que el PDF no pese demasiado
+    const maxDimension = 1200
+    let processedBuffer = buffer
+
+    if (width > maxDimension || height > maxDimension) {
+      processedBuffer = await sharp(buffer)
+        .resize(maxDimension, maxDimension, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .jpeg({ quality: 82, progressive: true })
+        .toBuffer()
+
+      console.log(`[IMG] 📐 Redimensionado: ${width}x${height} → ≤${maxDimension}px (${Math.round(processedBuffer.length/1024)}KB)`)
+    } else {
+      // Recomprimir a JPEG 82% si es muy pesada (>500KB)
+      if (buffer.length > 500 * 1024) {
+        processedBuffer = await sharp(buffer)
+          .jpeg({ quality: 82, progressive: true })
+          .toBuffer()
+        console.log(`[IMG] 🗜️ Comprimido: ${Math.round(buffer.length/1024)}KB → ${Math.round(processedBuffer.length/1024)}KB`)
+      }
+    }
+
+    // Convertir a data URL base64 para embeber directamente en el HTML
+    // Esto evita problemas de signed URLs expiradas y es más fiable
+    const base64 = processedBuffer.toString('base64')
+    const dataUrl = `data:image/jpeg;base64,${base64}`
+
+    console.log(`[IMG] ✅ ${width}x${height} (ratio ${ratio.toFixed(2)}) → ${cssClass}`)
+
+    return { cssClass, dataUrl, width, height, ratio }
+  } catch (error) {
+    console.log(`[IMG] ⚠️ Error procesando foto: ${error.message}`)
+    return { cssClass: 'photo-medium', dataUrl: null }
+  }
+}
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -223,10 +299,41 @@ body {
 
 /* === FOTOS === */
 .photo-block {
-  margin: 0.25in 0;
+  margin: 0.25in auto;
   text-align: center;
   page-break-inside: avoid;
 }
+/* Landscape photos: full width looks great */
+.photo-block.photo-landscape {
+  width: 85%;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Square photos: medium width */
+.photo-block.photo-square {
+  width: 65%;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Portrait photos: smaller width to prevent taking full page height */
+.photo-block.photo-portrait {
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Extreme portrait (9:16 phone vertical): even smaller */
+.photo-block.photo-portrait-tall {
+  width: 38%;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Panoramic photos: full width but capped height */
+.photo-block.photo-panoramic {
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Fallback generic sizes */
 .photo-block.photo-full {
   width: 100%;
 }
@@ -243,11 +350,23 @@ body {
 .photo-block img {
   width: 100%;
   height: auto;
+  max-height: 4.5in;
+  object-fit: contain;
   display: block;
   border: 0.5px solid #D4C4A0;
 }
 .photo-block img.photo-rounded {
   border-radius: 2px;
+}
+/* Very tall images should be constrained more */
+.photo-block.photo-portrait-tall img {
+  max-height: 3.8in;
+}
+/* Panoramic images capped to reasonable height */
+.photo-block.photo-panoramic img {
+  max-height: 2.5in;
+  object-fit: cover;
+  object-position: center;
 }
 .photo-caption {
   font-family: 'Poppins', sans-serif;
@@ -545,7 +664,11 @@ app.post('/generate-pdf', async (req, res) => {
     
     console.log(`[PDF] ✅ ${chapters.length} capítulos, ${memories.length} memorias`)
     
-    // Procesar URLs de fotos (signed URLs)
+    // Procesar fotos: obtener signed URL, detectar dimensiones, redimensionar, clasificar
+    console.log('[PDF] 📸 Procesando fotos de memorias...')
+    const photosCount = memories.filter(m => m.image_url).length
+    console.log(`[PDF] 📸 ${photosCount} memorias con fotos detectadas`)
+
     const memoriesWithPhotos = await Promise.all(memories.map(async (memory) => {
       if (memory.image_url) {
         try {
@@ -553,14 +676,27 @@ app.post('/generate-pdf', async (req, res) => {
           if (urlParts.length > 1) {
             const filePath = urlParts[1].split('?')[0]
             const { data } = await supabase.storage.from('memory-photos').createSignedUrl(filePath, 3600)
-            if (data?.signedUrl) return { ...memory, signedPhotoUrl: data.signedUrl }
+            if (data?.signedUrl) {
+              // Procesar imagen: detectar orientación, redimensionar, convertir a base64
+              const photoInfo = await processPhotoForPdf(data.signedUrl)
+              return {
+                ...memory,
+                signedPhotoUrl: photoInfo.dataUrl || data.signedUrl,
+                photoCssClass: photoInfo.cssClass,
+                photoWidth: photoInfo.width,
+                photoHeight: photoInfo.height
+              }
+            }
           }
-        } catch (e) { 
-          console.log(`[PDF] ⚠️ Foto error: ${memory.id}`) 
+        } catch (e) {
+          console.log(`[PDF] ⚠️ Foto error: ${memory.id}: ${e.message}`)
         }
       }
       return memory
     }))
+
+    const processedPhotos = memoriesWithPhotos.filter(m => m.signedPhotoUrl).length
+    console.log(`[PDF] ✅ ${processedPhotos} fotos procesadas correctamente`)
     
     // Generar HTML
     const html = generateBookHTML(book, config, chapters, memoriesWithPhotos)
@@ -816,10 +952,11 @@ function renderChapter(chapter, chapterNum, memories, protagonistName, pageNum) 
   <p class="testimony-attribution">— ${memory.contributor_name}, ${memory.contributor_relationship || 'familiar'}</p>
 `
 
-    // Foto si existe
+    // Foto si existe — con clase CSS adaptativa según orientación
     if (memory.signedPhotoUrl) {
+      const photoClass = memory.photoCssClass || 'photo-medium'
       html += `
-  <div class="photo-block photo-medium">
+  <div class="photo-block ${photoClass}">
     <img src="${memory.signedPhotoUrl}" alt="Foto de ${memory.contributor_name}">
     <p class="photo-attribution">— ${memory.contributor_name}</p>
   </div>
