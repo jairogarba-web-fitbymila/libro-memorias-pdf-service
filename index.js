@@ -85,12 +85,22 @@ async function processPhotoForPdf(imageUrl) {
 const app = express()
 const PORT = process.env.PORT || 3001
 
-app.use(cors())
+app.use(cors({
+  origin: [
+    'https://librodememorias.com',
+    'https://www.librodememorias.com',
+    process.env.ALLOWED_ORIGIN || 'http://localhost:3000'
+  ]
+}))
 app.use(express.json({ limit: '50mb' }))
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xuyacfbwqzqnxojgzqmw.supabase.co'
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_URL = process.env.SUPABASE_URL
+if (!SUPABASE_URL) {
+  console.error('[INIT] ❌ FATAL: SUPABASE_URL no está configurada')
+  process.exit(1)
+}
 
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!SUPABASE_KEY) {
   console.error('[INIT] ❌ FATAL: SUPABASE_SERVICE_ROLE_KEY no está configurada')
   process.exit(1)
